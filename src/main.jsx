@@ -1,78 +1,29 @@
-import React, { useMemo, useState } from "react";
-import { createRoot } from "react-dom/client";
-import {
-  Braces, CaseUpper, Check, Clipboard, Code2, Copy, Hash, KeyRound,
-  Link2, Menu, Moon, Palette, QrCode, Search, ShieldCheck, Sun, Terminal,
-  Type, X, Zap
-} from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Braces, Check, Clipboard, Code2, Copy, Hash, KeyRound, Link2, Menu, Moon, Palette, Search, ShieldCheck, Sun, Terminal, Type, X, Zap } from "lucide-react";
 import "./styles.css";
 
-const tools = [
-  { id:"json", name:"JSON Formatter", desc:"Format and validate JSON instantly.", icon:Braces, category:"Format" },
-  { id:"base64", name:"Base64", desc:"Encode or decode Base64 text.", icon:Code2, category:"Encode" },
-  { id:"url", name:"URL Encoder", desc:"Safely encode and decode URLs.", icon:Link2, category:"Encode" },
-  { id:"color", name:"Color Converter", desc:"Convert HEX, RGB and HSL colors.", icon:Palette, category:"Convert" },
-  { id:"uuid", name:"UUID Generator", desc:"Generate unique UUID v4 values.", icon:Hash, category:"Generate" },
-  { id:"timestamp", name:"Timestamp", desc:"Convert Unix timestamps to dates.", icon:Terminal, category:"Convert" },
-  { id:"counter", name:"Text Counter", desc:"Count words, characters and lines.", icon:Type, category:"Text" },
-  { id:"password", name:"Password Generator", desc:"Create strong random passwords.", icon:KeyRound, category:"Generate" },
-];
+const tools=[{id:"json",name:"JSON Formatter",desc:"Format and validate JSON instantly.",icon:Braces,category:"Format"},{id:"base64",name:"Base64",desc:"Encode or decode Base64 text.",icon:Code2,category:"Encode"},{id:"url",name:"URL Encoder",desc:"Safely encode and decode URLs.",icon:Link2,category:"Encode"},{id:"color",name:"Color Converter",desc:"Convert HEX and RGB colors.",icon:Palette,category:"Convert"},{id:"uuid",name:"UUID Generator",desc:"Generate unique UUID v4 values.",icon:Hash,category:"Generate"},{id:"timestamp",name:"Timestamp",desc:"Convert Unix timestamps to dates.",icon:Terminal,category:"Convert"},{id:"counter",name:"Text Counter",desc:"Count words, characters and lines.",icon:Type,category:"Text"},{id:"password",name:"Password Generator",desc:"Create strong random passwords.",icon:KeyRound,category:"Generate"}];
 
 function App(){
-  const [active,setActive]=useState("json");
-  const [dark,setDark]=useState(true);
-  const [query,setQuery]=useState("");
-  const [mobile,setMobile]=useState(false);
-  const filtered=useMemo(()=>tools.filter(t=>(t.name+" "+t.desc).toLowerCase().includes(query.toLowerCase())),[query]);
-  const current=tools.find(t=>t.id===active) || tools[0];
-  return <div className={dark?"app dark":"app"}>
-    <header className="topbar">
-      <div className="brand"><div className="brandmark"><Zap size={17}/></div><span>WebToolBox</span><em>PRO</em></div>
-      <div className="top-actions">
-        <div className="search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search tools..." /><kbd>⌘ K</kbd></div>
-        <button className="icon-btn" onClick={()=>setDark(!dark)} aria-label="Toggle theme">{dark?<Sun size={18}/>:<Moon size={18}/>}</button>
-        <button className="mobile-btn icon-btn" onClick={()=>setMobile(!mobile)}>{mobile?<X/>:<Menu/>}</button>
-      </div>
-    </header>
-    <div className="layout">
-      <aside className={mobile?"sidebar open":"sidebar"}>
-        <div className="side-label">TOOLS</div>
-        {filtered.map(t=><button key={t.id} className={active===t.id?"tool-link active":"tool-link"} onClick={()=>{setActive(t.id);setMobile(false)}}><t.icon size={17}/><span>{t.name}</span></button>)}
-        {filtered.length===0&&<p className="empty">No tools found.</p>}
-        <div className="side-bottom"><div className="privacy"><ShieldCheck size={16}/><div><strong>Runs locally</strong><span>Your data stays in your browser.</span></div></div></div>
-      </aside>
-      {mobile&&<div className="overlay" onClick={()=>setMobile(false)}/>}
-      <main className="main">
-        <div className="breadcrumbs"><span>Tools</span><b>/</b><strong>{current.name}</strong></div>
-        <section className="hero"><div><div className="eyebrow">DEVELOPER UTILITY</div><h1>{current.name}</h1><p>{current.desc}</p></div><div className="hero-icon"><current.icon size={25}/></div></section>
-        <ToolView id={current.id}/>
-      </main>
-    </div>
-  </div>
+ const [active,setActive]=useState("json"),[dark,setDark]=useState(true),[query,setQuery]=useState(""),[mobile,setMobile]=useState(false);const searchRef=useRef(null);
+ const filtered=useMemo(()=>tools.filter(t=>(t.name+" "+t.desc+" "+t.category).toLowerCase().includes(query.toLowerCase())),[query]);const current=tools.find(t=>t.id===active)||tools[0];
+ useEffect(()=>{const onKey=e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();searchRef.current?.focus()}};window.addEventListener("keydown",onKey);return()=>window.removeEventListener("keydown",onKey)},[]);
+ useEffect(()=>{document.documentElement.style.colorScheme=dark?"dark":"light"},[dark]);
+ return <div className={dark?"app dark":"app"}><header className="topbar"><div className="brand"><div className="brandmark"><Zap size={17}/></div><span className="brand-name">WebToolBox</span><em>PRO</em></div><div className="top-actions"><div className="search"><Search size={15}/><input ref={searchRef} value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search tools..." aria-label="Search tools"/><kbd>⌘ K</kbd></div><button className="icon-btn" onClick={()=>setDark(v=>!v)} aria-label="Toggle theme">{dark?<Sun size={17}/>:<Moon size={17}/>}</button><button className="mobile-btn icon-btn" onClick={()=>setMobile(v=>!v)} aria-label="Open tools menu">{mobile?<X size={18}/>:<Menu size={18}/>}</button></div></header>
+ <div className="layout"><aside className={mobile?"sidebar open":"sidebar"}><div className="side-label">TOOLS</div>{filtered.map(t=><button key={t.id} className={active===t.id?"tool-link active":"tool-link"} onClick={()=>{setActive(t.id);setMobile(false)}}><t.icon size={17}/><span>{t.name}</span></button>)}{filtered.length===0&&<p className="empty">No tools found.</p>}<div className="side-bottom"><div className="privacy"><ShieldCheck size={16}/><div><strong>Runs locally</strong><span>Your data stays in your browser. Nothing is uploaded.</span></div></div></div></aside>{mobile&&<div className="overlay" onClick={()=>setMobile(false)}/>}<main className="main"><div className="breadcrumbs"><span>Tools</span><b>/</b><strong>{current.name}</strong></div><section className="hero"><div><div className="eyebrow">DEVELOPER UTILITY</div><h1>{current.name}</h1><p>{current.desc} Fast, private and built for everyday development.</p></div><div className="hero-icon"><current.icon size={25}/></div></section><ToolView id={current.id}/></main></div></div>;
 }
-
 function Editor({value,setValue,placeholder}){return <textarea className="editor" value={value} onChange={e=>setValue(e.target.value)} placeholder={placeholder}/>}
-
-function ToolView({id}){
- const [value,setValue]=useState("");
- const [output,setOutput]=useState("");
- const [copied,setCopied]=useState(false);
- const copy=async()=>{await navigator.clipboard.writeText(output||value);setCopied(true);setTimeout(()=>setCopied(false),1200)};
- const run=(fn)=>{try{setOutput(fn())}catch(e){setOutput("Error: "+e.message)}};
- if(id==="json") return <Workspace title="JSON input"><Editor value={value} setValue={setValue} placeholder={'Paste JSON here...\n\n{"name":"WebToolBox","version":1}'}/><div className="actions"><button className="primary" onClick={()=>run(()=>JSON.stringify(JSON.parse(value),null,2))}>Format JSON</button><button onClick={()=>{setValue("");setOutput("")}}>Clear</button></div><Output value={output} copy={copy} copied={copied}/></Workspace>;
- if(id==="base64") return <Workspace title="Text"><Editor value={value} setValue={setValue} placeholder="Enter text to encode or decode..."/><div className="actions"><button className="primary" onClick={()=>run(()=>btoa(unescape(encodeURIComponent(value))))}>Encode</button><button onClick={()=>run(()=>decodeURIComponent(escape(atob(value))))}>Decode</button><button onClick={()=>{setValue("");setOutput("")}}>Clear</button></div><Output value={output} copy={copy} copied={copied}/></Workspace>;
- if(id==="url") return <Workspace title="URL / text"><Editor value={value} setValue={setValue} placeholder="https://example.com/?q=hello world"/><div className="actions"><button className="primary" onClick={()=>setOutput(encodeURIComponent(value))}>Encode URL</button><button onClick={()=>run(()=>decodeURIComponent(value))}>Decode URL</button></div><Output value={output} copy={copy} copied={copied}/></Workspace>;
- if(id==="uuid") return <Generator title="Generate UUIDs" button="Generate UUID" generate={()=>crypto.randomUUID()}/>;
- if(id==="password") return <Generator title="Generate secure passwords" button="Generate Password" generate={()=>Array.from(crypto.getRandomValues(new Uint32Array(20)),n=>"ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%".at(n%64)).join("")}/>;
- if(id==="timestamp") return <Workspace title="Unix timestamp"><Editor value={value} setValue={setValue} placeholder="e.g. 1790860800"/><div className="actions"><button className="primary" onClick={()=>run(()=>new Date(Number(value)*1000).toLocaleString())}>Convert</button><button onClick={()=>setOutput(String(Math.floor(Date.now()/1000)))}>Current timestamp</button></div><Output value={output} copy={copy} copied={copied}/></Workspace>;
- if(id==="counter") return <Workspace title="Your text"><Editor value={value} setValue={setValue} placeholder="Start typing or paste text..."/><div className="stats"><div><b>{value.length}</b><span>Characters</span></div><div><b>{value.trim()?value.trim().split(/\s+/).length:0}</b><span>Words</span></div><div><b>{value?value.split(/\n/).length:0}</b><span>Lines</span></div></div></Workspace>;
- if(id==="color") return <ColorTool/>;
- return <Workspace title="Input"><Editor value={value} setValue={setValue} placeholder="Enter your value..."/><div className="actions"><button className="primary" onClick={()=>setOutput(value)}>Process</button></div><Output value={output} copy={copy} copied={copied}/></Workspace>;
-}
-
+function ToolView({id}){const [value,setValue]=useState(""),[output,setOutput]=useState(""),[copied,setCopied]=useState(false);const copy=async()=>{if(!output&&!value)return;await navigator.clipboard.writeText(output||value);setCopied(true);setTimeout(()=>setCopied(false),1200)};const run=fn=>{try{setOutput(fn())}catch(e){setOutput("Error: "+e.message)}};
+ if(id==="json")return <Workspace title="JSON input"><Editor value={value} setValue={setValue} placeholder={'Paste JSON here...\n\n{"name":"WebToolBox","version":1}'}/><div className="actions"><button className="primary" onClick={()=>run(()=>JSON.stringify(JSON.parse(value),null,2))}>Format JSON</button><button onClick={()=>{setValue("");setOutput("")}}>Clear</button></div><Output value={output} copy={copy} copied={copied}/></Workspace>;
+ if(id==="base64")return <Workspace title="Text"><Editor value={value} setValue={setValue} placeholder="Enter text to encode or decode..."/><div className="actions"><button className="primary" onClick={()=>run(()=>btoa(unescape(encodeURIComponent(value))))}>Encode</button><button onClick={()=>run(()=>decodeURIComponent(escape(atob(value))))}>Decode</button><button onClick={()=>{setValue("");setOutput("")}}>Clear</button></div><Output value={output} copy={copy} copied={copied}/></Workspace>;
+ if(id==="url")return <Workspace title="URL / text"><Editor value={value} setValue={setValue} placeholder="https://example.com/?q=hello world"/><div className="actions"><button className="primary" onClick={()=>setOutput(encodeURIComponent(value))}>Encode URL</button><button onClick={()=>run(()=>decodeURIComponent(value))}>Decode URL</button><button onClick={()=>{setValue("");setOutput("")}}>Clear</button></div><Output value={output} copy={copy} copied={copied}/></Workspace>;
+ if(id==="uuid")return <Generator title="Generate UUIDs" button="Generate UUID" generate={()=>crypto.randomUUID()}/>;
+ if(id==="password")return <Generator title="Generate secure passwords" button="Generate Password" generate={()=>Array.from(crypto.getRandomValues(new Uint32Array(20)),n=>"ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%".at(n%64)).join("")}/>;
+ if(id==="timestamp")return <Workspace title="Unix timestamp"><Editor value={value} setValue={setValue} placeholder="e.g. 1790860800"/><div className="actions"><button className="primary" onClick={()=>run(()=>{const n=Number(value);if(!Number.isFinite(n))throw new Error("Enter a valid timestamp");return new Date(n*1000).toLocaleString()})}>Convert</button><button onClick={()=>setOutput(String(Math.floor(Date.now()/1000)))}>Current timestamp</button><button onClick={()=>{setValue("");setOutput("")}}>Clear</button></div><Output value={output} copy={copy} copied={copied}/></Workspace>;
+ if(id==="counter")return <Workspace title="Your text"><Editor value={value} setValue={setValue} placeholder="Start typing or paste text..."/><div className="stats"><div><b>{value.length}</b><span>Characters</span></div><div><b>{value.trim()?value.trim().split(/\s+/).length:0}</b><span>Words</span></div><div><b>{value?value.split(/\n/).length:0}</b><span>Lines</span></div></div></Workspace>;
+ if(id==="color")return <ColorTool/>;return <Workspace title="Input"><Editor value={value} setValue={setValue} placeholder="Enter your value..."/><div className="actions"><button className="primary" onClick={()=>setOutput(value)}>Process</button></div><Output value={output} copy={copy} copied={copied}/></Workspace>}
 function Workspace({title,children}){return <div className="card"><div className="card-head"><span>{title}</span><span className="live"><i/> LOCAL</span></div>{children}</div>}
-function Output({value,copy,copied}){return <div className="output"><div className="output-head"><span>Output</span>{value&&<button className="copy" onClick={copy}>{copied?<Check size={15}/>:<Copy size={15}/>} {copied?"Copied":"Copy"}</button>}</div><pre>{value||"Your result will appear here..."}</pre></div>}
-function Generator({title,button,generate}){const [out,setOut]=useState("");const [copied,setCopied]=useState(false);const copy=()=>{navigator.clipboard.writeText(out);setCopied(true);setTimeout(()=>setCopied(false),1000)};return <div className="card generator"><div className="card-head"><span>{title}</span><span className="live"><i/> LOCAL</span></div><div className="generator-box"><div className="generated">{out||"Click generate to create a value"}</div><button className="primary" onClick={()=>setOut(generate())}>{button}</button>{out&&<button className="copy" onClick={copy}>{copied?<Check/>:<Clipboard/>} {copied?"Copied":"Copy result"}</button>}</div></div>}
-function ColorTool(){const [hex,setHex]=useState("#2563EB");const [rgb,setRgb]=useState("37, 99, 235");const convert=(v)=>{let h=v.replace("#","");if(h.length===3)h=h.split("").map(x=>x+x).join("");const n=parseInt(h,16);const r=n>>16,g=(n>>8)&255,b=n&255;setRgb([r,g,b].join(", "));return [r,g,b]};return <div className="card"><div className="card-head"><span>Color conversion</span><span className="live"><i/> LOCAL</span></div><div className="color-preview" style={{background:hex}}><span>{hex}</span></div><div className="color-grid"><label>HEX<input value={hex} onChange={e=>setHex(e.target.value)} onBlur={()=>convert(hex)}/></label><label>RGB<input value={rgb} onChange={e=>setRgb(e.target.value)}/></label></div><div className="hint">Enter a 3 or 6 digit HEX value. Conversion runs locally.</div></div>}
-
+function Output({value,copy,copied}){return <div className="output"><div className="output-head"><span>Output</span>{value&&<button className="copy" onClick={copy}>{copied?<Check size={14}/>:<Copy size={14}/>} {copied?"Copied":"Copy"}</button>}</div><pre>{value||"Your result will appear here..."}</pre></div>}
+function Generator({title,button,generate}){const [out,setOut]=useState(""),[copied,setCopied]=useState(false);const copy=()=>{navigator.clipboard.writeText(out);setCopied(true);setTimeout(()=>setCopied(false),1000)};return <div className="card generator"><div className="card-head"><span>{title}</span><span className="live"><i/> LOCAL</span></div><div className="generator-box"><div className="generated">{out||"Click generate to create a value"}</div><button className="primary" onClick={()=>setOut(generate())}>{button}</button>{out&&<button className="copy" onClick={copy}>{copied?<Check size={14}/>:<Clipboard size={14}/>} {copied?"Copied":"Copy result"}</button>}</div></div>}
+function ColorTool(){const [hex,setHex]=useState("#2563EB"),[rgb,setRgb]=useState("37, 99, 235");const convert=v=>{let h=v.replace("#","");if(!/^[0-9a-f]{3}$|^[0-9a-f]{6}$/i.test(h))return;if(h.length===3)h=h.split("").map(x=>x+x).join("");const n=parseInt(h,16);const r=n>>16,g=(n>>8)&255,b=n&255;setHex("#"+h.toUpperCase());setRgb([r,g,b].join(", "))};return <div className="card"><div className="card-head"><span>Color conversion</span><span className="live"><i/> LOCAL</span></div><div className="color-preview" style={{background:hex}}><span>{hex}</span></div><div className="color-grid"><label>HEX<input value={hex} onChange={e=>setHex(e.target.value)} onBlur={()=>convert(hex)} onKeyDown={e=>e.key==="Enter"&&convert(hex)}/></label><label>RGB<input value={rgb} readOnly/></label></div><div className="hint">Enter a valid 3 or 6 digit HEX value. Conversion runs locally.</div></div>}
 createRoot(document.getElementById("root")).render(<App/>);
