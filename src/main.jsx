@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
 import { Braces, Check, Clipboard, Code2, Copy, Hash, KeyRound, Link2, Menu, Moon, Palette, Search, ShieldCheck, Sun, Terminal, Type, X, Zap } from "lucide-react";
 import "./styles.css";
 
