@@ -1,45 +1,46 @@
-name: Test and Deploy to Vercel
+name: Test and Deploy WebToolBox
 
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   test:
-    name: Test & Build
+    name: Test
     runs-on: ubuntu-latest
-    outputs:
-      passed: ${{ steps.build.outcome == 'success' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
       - name: Install dependencies
         run: npm install
-
-      - name: Build
-        id: build
-        run: npm run build
+      - name: Run tests
+        run: npm test
 
   deploy:
     name: Deploy to Vercel
     needs: test
-    if: needs.test.result == 'success'
+    if: github.event_name != 'pull_request' && needs.test.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Deploy
-        run: npx vercel --prod --yes --token="${{ secrets.VERCEL_TOKEN }}" --scope="${{ secrets.VERCEL_ORG_ID }}"
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: team_omSjEoPGsUhpZpeqoSyCiUZH
+          VERCEL_PROJECT_ID: prj_U4y26Tyn3GEzXMl1BNugu7icdONA
+        run: npx vercel@latest deploy --prod --yes --token="$VERCEL_TOKEN"
